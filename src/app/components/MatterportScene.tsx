@@ -1,6 +1,7 @@
 "use client";
 
-import {useCallback, useEffect, useRef} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
+import { MpSdk } from "../../../public/showcase-bundle/sdk";
 
 type WindowWithMP_SDK = Window & {
     MP_SDK: {
@@ -10,26 +11,44 @@ type WindowWithMP_SDK = Window & {
 
 const MatterportScene = () => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const mpSdk = useRef<any | null>(null);
+    const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
 
-    const initializeMatterport = useCallback(async () => {
+
+    useEffect(() => {
+        if (!iframeRef.current){ 
+            return;
+        }
+
         const showcase = document.getElementById('showcase') as HTMLIFrameElement;
-        if (!showcase) return;
-    
-        showcase.onload = async () => {
-                const showcaseWindow = showcase.contentWindow as WindowWithMP_SDK;
-                mpSdk.current = await showcaseWindow.MP_SDK.connect(showcaseWindow);
-
-                console.log('Hello Bundle SDK', mpSdk.current);
-            };
-        }, []);
-    
-      useEffect(() => {
-        initializeMatterport();
         
-    
+        if (!showcase) {
+            return;
+        }
+        
+        const showcaseWindow = showcase.contentWindow as WindowWithMP_SDK;
+
+        const initMatterport = async () => {
+            try {
+                const mpSdk: any = await showcaseWindow.MP_SDK.connect(showcaseWindow);
+                setMpSdk(mpSdk);
+
+                console.log('Hello Bundle SDK', mpSdk);
+            } catch (e) {
+                console.error(e);
+
+                return;
+            }
+        };
+
+        if (showcaseWindow.document.readyState === 'complete') {
+            initMatterport();
+        } else {
+            showcaseWindow.addEventListener('load', initMatterport);
+        }
+
         return () => {
-            mpSdk.current?.disconnect();
+            showcaseWindow.removeEventListener('load', initMatterport);
+            mpSdk?.disconnect();
         };
     }, []);
 
