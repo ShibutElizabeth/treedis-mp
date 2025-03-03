@@ -1,7 +1,7 @@
 "use client";
 
 import {useCallback, useEffect, useRef, useState} from "react";
-import { MpSdk } from "../../../public/showcase-bundle/sdk";
+import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
 
 type WindowWithMP_SDK = Window & {
     MP_SDK: {
@@ -12,6 +12,8 @@ type WindowWithMP_SDK = Window & {
 const MatterportScene = () => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
+    const [currentSweep, setCurrentSweep] = useState<Sweep.ObservableSweepData | null>(null);
+    const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
 
 
     useEffect(() => {
@@ -51,6 +53,30 @@ const MatterportScene = () => {
             mpSdk?.disconnect();
         };
     }, []);
+
+    useEffect(() => {
+        if(!mpSdk){
+            return;
+        }
+        
+        const logCameraPose = () => {
+            mpSdk.Camera.pose.subscribe((pose) => {
+                setCameraPose(pose);
+                console.log("Current Camera Position:", pose.position);
+            });
+        };
+    
+        const logCurrentSweep = () => {
+            mpSdk.Sweep.current.subscribe((sweep) => {
+                setCurrentSweep(sweep);
+                console.log("Current Sweep Position:", sweep.position);
+            });
+        };
+
+        logCameraPose();
+        logCurrentSweep();
+
+    }, [mpSdk])
 
 
     return (
