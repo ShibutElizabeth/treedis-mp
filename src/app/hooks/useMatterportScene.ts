@@ -1,16 +1,10 @@
 "use client";
 
-import {useCallback, useEffect, useRef, useState} from "react";
+import { RefObject, useEffect, useState } from "react";
 import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
+import { WindowWithMP_SDK } from "../types/matterport";
 
-type WindowWithMP_SDK = Window & {
-    MP_SDK: {
-      connect: (window: Window) => Promise<unknown>;
-    };
-};
-
-const MatterportScene = () => {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
     const [currentSweep, setCurrentSweep] = useState<Sweep.ObservableSweepData | null>(null);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
@@ -79,25 +73,9 @@ const MatterportScene = () => {
     }, [mpSdk])
 
 
-    return (
-        <div
-            style={{
-            position: "relative",
-            width: "100vw",
-            height: "100vh"
-        }}>
-            <iframe
-                id="showcase"
-                ref={iframeRef}
-                src={`/showcase-bundle/showcase.html?m=${process.env.NEXT_PUBLIC_MP_MODEL_ID}&applicationKey=${process.env.NEXT_PUBLIC_MP_SDK_KEY}`}
-                style={{
-                    width: "100%",
-                    height: "100%",
-                    border: "none"
-                }}
-                allow="vr"
-                allowFullScreen></iframe>
-        </div>
-    );
+    return {
+        sdk: mpSdk,
+        cameraPose: cameraPose,
+        currentSweep: currentSweep
+    };
 };
-export default MatterportScene;
