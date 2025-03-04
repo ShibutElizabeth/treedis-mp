@@ -10,12 +10,10 @@ import { useMatterportContext } from "../hooks/UseMatterportContext";
 const ThreeModel = () => {
     const [gltfUrl, setGltfUrl] = useState<string | null>(null);
     const {sdk, sweeps} = useMatterportContext();
-    const [position, setPosition] = useState<MpSdk.Vector3 | THREE.Vector3>(new THREE.Vector3(0));
 
     useEffect(() => {
         if (gltfUrl && sdk && sweeps.length > 0) {
-            setPosition(sweeps[6].position);
-            addModelToMatterport(sdk, gltfUrl);
+            addModelToMatterport(sdk, gltfUrl, sweeps[6].position);
         }
     }, [sdk, sweeps]);
 
@@ -95,16 +93,17 @@ const ThreeModel = () => {
     };
     
 
-    const addModelToMatterport = async (sdk: MpSdk, gltfUrl: string) => {
+    const addModelToMatterport = async (sdk: MpSdk, gltfUrl: string, position: MpSdk.Vector3) => {
         try {
             const [sceneObject] = await sdk.Scene.createObjects(1);
             const modelNode = sceneObject.addNode();
 
             modelNode.addComponent(sdk.Scene.Component.GLTF_LOADER, { url: gltfUrl });
             modelNode.position.set(position.x, 0, position.z);
+    
             modelNode.start();
 
-            console.log("3D model has been added");
+            console.log("3D model has been added to Matterport");
         } catch (error) {
             console.error("Error adding a 3D model:", error);
         }

@@ -7,7 +7,7 @@ import { WindowWithMP_SDK } from "../types/matterport";
 export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
     const [currentSweep, setCurrentSweep] = useState<Sweep.ObservableSweepData | null>(null);
-    const [sweeps, setSweeps] = useState<Sweep.ObservableSweepData[]>([]);
+    const [allSweeps, setAllSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [filteredSweeps, setFilteredSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
 
@@ -52,12 +52,9 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
     const addTagToFarRoom = async (sdk: MpSdk) => {
         try {
-            if(currentSweep && sweeps){
+            if(currentSweep && filteredSweeps.length > 0){
                 const graph = await sdk.Sweep.createGraph();
                 
-
-                const filtered = sweeps.filter((sweep) => sweep.floorInfo.sequence === 1);
-                setFilteredSweeps(filtered);
                 const allowedSweepIds = filteredSweeps.map((sweep) => sweep.sid);
                 console.log(filteredSweeps)
                 let farthestSweep: Sweep.ObservableSweepData | null = filteredSweeps[0];
@@ -129,7 +126,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         const logAllSweeps = () => {
             mpSdk.Sweep.data.subscribe({
                 onCollectionUpdated: (sweeps) => {
-                    setSweeps(Object.values(sweeps));
+                    setAllSweeps(Object.values(sweeps));
                 }
             });
         }
@@ -138,18 +135,25 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         logCurrentSweep();
         logAllSweeps();
 
-    }, [mpSdk])
+    }, [mpSdk]);
+
+    useEffect(() => {
+        if(allSweeps.length > 0){
+            const filtered = allSweeps?.filter((sweep) => sweep.floorInfo.sequence === 1);
+            setFilteredSweeps(filtered);
+        }
+    }, [allSweeps])
 
     useEffect(()=>{
-        if(sweeps && mpSdk){
+        if(allSweeps && mpSdk){
             addTagToFarRoom(mpSdk);
         }
-    }, [sweeps, mpSdk])
+    }, [allSweeps, mpSdk])
 
     return {
         sdk: mpSdk,
         cameraPose: cameraPose,
         currentSweep: currentSweep,
-        sweeps: sweeps?.filter((sweep) => sweep.floorInfo.sequence === 1)
+        sweeps: filteredSweeps
     };
 };
