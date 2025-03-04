@@ -23,19 +23,24 @@ const ThreeModel = () => {
 
     const generateGLB = async () => {
         const scene = new THREE.Scene();
-        const light = new THREE.AmbientLight('#fec76f');
-        light.position.set(2, 2, 2);
-        const lightD = new THREE.DirectionalLight('#ffffff');
-        lightD.position.set(2, 10, 2);
-        scene.add(lightD);
+        const ambientLight = new THREE.AmbientLight('#fec76f');
+        ambientLight.position.set(2, 2, 2);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight('#ffffff', 10);
+        directionalLight.position.set(2, 5, 2);
+        scene.add(directionalLight);
     
         const chairSeatMaterial = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color('#8a806d'),
+            roughness: 1,
             side: THREE.DoubleSide,
         });
 
         const chairLegsMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#332e24'),
+            color: new THREE.Color('#111111'),
+            roughness: 1,
+            metalness: 1,
             side: THREE.DoubleSide,
         });
     
