@@ -1,27 +1,21 @@
 import { Sweep } from "../../../public/showcase-bundle/sdk";
-import { Position, Rotation } from "../types/utils";
+import { Position } from "../types/utils";
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const toDegrees = (rad: number) => rad * (180 / Math.PI);
 
-const calculateRotation = (currentPos: Position, targetPos: Position): Rotation => {
-    const { x: dx, y: dy, z: dz } = {
+const calculateYRotation = (currentPos: Position, targetPos: Position): number => {
+    const { x: dx, z: dz } = {
         x: targetPos.x - currentPos.x,
-        y: targetPos.y - currentPos.y,
         z: targetPos.z - currentPos.z
     };
 
-    const distance = Math.sqrt(dx * dx + dz * dz);
     const yRotation = ((toDegrees(Math.atan2(dx, dz)) + 360) % 360) - 180;
-    const xRotation = toDegrees(Math.atan2(dy, distance));
 
-    return {
-        x: Math.max(-90, Math.min(90, xRotation)),
-        y: yRotation
-    };
+    return yRotation;
 };
 
-const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]) => {
+const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]): Sweep.ObservableSweepData | null => {
     if (!sweeps.length) return null;
       
     sweeps.sort((a, b) => {
@@ -34,4 +28,4 @@ const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]) => {
     return sweeps[0]; 
 };
 
-export { delay, calculateRotation, findMaxSweep };
+export { delay, calculateYRotation, findMaxSweep };

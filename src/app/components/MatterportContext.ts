@@ -6,6 +6,5 @@ export const MatterportContext = createContext<MatterportContextType>({
     cameraPose: null,
     currentSweep: null,
     sweeps: [],
-    teleportToOffice: () => {},
-    navigateToOffice: () => {},
+    toOffice: () => {},
 });

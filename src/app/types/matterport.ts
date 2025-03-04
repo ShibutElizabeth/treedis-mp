@@ -1,4 +1,5 @@
 import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
+import { ToOffice } from "./utils";
 
 export type WindowWithMP_SDK = Window & {
     MP_SDK: {
@@ -11,6 +12,5 @@ export type MatterportContextType = {
     cameraPose: Camera.Pose | null,
     currentSweep: Sweep.ObservableSweepData | null,
     sweeps: Sweep.ObservableSweepData[],
-    teleportToOffice: () => void,
-    navigateToOffice: () => void
+    toOffice: (walkingStyle: ToOffice) => void
 };

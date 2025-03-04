@@ -1,15 +1,36 @@
 "use client"
-import { useEffect, useState } from "react";
+
+import { MenuItem, ToOffice } from "@/app/types/utils";
 import styles from "./menu.module.css";
-import { useMatterportContext } from "@/app/hooks/UseMatterportContext";
+import { JSX } from "react";
+import { MenuOption } from "./MenuOption";
 
 export const Menu = () => {
-    const {teleportToOffice, navigateToOffice} = useMatterportContext();
+    const menuItemsData: MenuItem[] = [
+        {
+            title: 'Teleport to office',
+            walkingStyle: ToOffice.TELEPORT
+        },
+        {
+            title: 'Navigate to office',
+            walkingStyle: ToOffice.NAVIGATE
+        }
+    ];
+
+    const getItems = () => {
+        const menuItems: JSX.Element[] = [];
+        menuItemsData.forEach((item, i) => {
+            menuItems.push(
+                <MenuOption key={item.title + i} item={item} />
+            )
+        });
+
+        return menuItems;
+    }
 
     return (
         <div className={styles.menuContainer}>
-            <div className={styles.menuOption} onClick={() => teleportToOffice()}>Teleport to Office</div>
-            <div className={styles.menuOption} onClick={() => navigateToOffice()}>Navigate to Office</div>
+            { getItems() }
         </div>
     );
 };
