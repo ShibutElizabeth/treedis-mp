@@ -22,7 +22,6 @@ const MatterportOverlay = () => {
                 ref={iframeRef}
                 src={`/showcase-bundle/showcase.html?m=${process.env.NEXT_PUBLIC_MP_MODEL_ID}&applicationKey=${process.env.NEXT_PUBLIC_MP_SDK_KEY}`}
                 className={styles.scene}
-                allow="vr"
                 allowFullScreen></iframe>
         </div>
     );

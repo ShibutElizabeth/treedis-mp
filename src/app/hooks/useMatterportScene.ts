@@ -17,6 +17,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     const [officeSweep, setOfficeSweep] = useState<Sweep.ObservableSweepData | null>(null);
     const [filteredSweeps, setFilteredSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
         if (!iframeRef.current) return;
@@ -81,6 +82,8 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
         await mpSdk.Sweep.moveTo(officeSweep.id, {
             transition: mpSdk.Sweep.Transition.INSTANT,
+        }).finally(() => {
+            setIsPlaying(false);
         });
     }
 
@@ -110,6 +113,8 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
             await mpSdk.Sweep.moveTo(id, {
                 transition: mpSdk.Sweep.Transition.FLY,
                 transitionTime: TRANSITION_TIME,
+            }).finally(() => {
+                setIsPlaying(false);
             });
     
             await delay(TRANSITION_TIME / 7);
@@ -118,6 +123,8 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     
 
     const toOffice = async (walkingStyle: ToOffice) => {
+        if(isPlaying) return;
+        setIsPlaying(true)
         if (walkingStyle === ToOffice.NAVIGATE) await navigateToOffice();
         if (walkingStyle === ToOffice.TELEPORT) await teleportToOffice();
     };
