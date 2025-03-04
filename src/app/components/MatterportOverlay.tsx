@@ -14,7 +14,7 @@ const MatterportOverlay = ({ children }: { children: React.ReactNode | null }) =
     return (
         <div className={styles.container}>
             <MatterportContext.Provider value={matterportScene}>
-                <ThreeModel sdk={sdk} />
+                <ThreeModel />
             </MatterportContext.Provider>
             <iframe
                 id="showcase"
