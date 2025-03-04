@@ -7,10 +7,10 @@ import { WindowWithMP_SDK } from "../types/matterport";
 export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
     const [currentSweep, setCurrentSweep] = useState<Sweep.ObservableSweepData | null>(null);
+    const [officeSweep, setOfficeSweep] = useState<Sweep.ObservableSweepData | null>(null);
     const [allSweeps, setAllSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [filteredSweeps, setFilteredSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
-
 
     useEffect(() => {
         if (!iframeRef.current){ 
@@ -52,37 +52,41 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
     const addTagToFarRoom = async (sdk: MpSdk) => {
         try {
-            if(currentSweep && filteredSweeps.length > 0){
-                const graph = await sdk.Sweep.createGraph();
+            if(filteredSweeps.length > 0){
+                // const graph = await sdk.Sweep.createGraph();
                 
-                const allowedSweepIds = filteredSweeps.map((sweep) => sweep.sid);
-                console.log(filteredSweeps)
-                let farthestSweep: Sweep.ObservableSweepData | null = filteredSweeps[0];
-                let maxDistance = 0;
+                // const allowedSweepIds = filteredSweeps.map((sweep) => sweep.sid);
+                // console.log(filteredSweeps)
+                // let farthestSweep: Sweep.ObservableSweepData | null = filteredSweeps[0];
+                // let maxDistance = 0;
 
-                for (const edge of graph.edges) {
-                    const { src, dst, weight } = edge;
+                // for (const edge of graph.edges) {
+                //     const { src, dst, weight } = edge;
     
-                    const srcId = (src as unknown as Sweep.ObservableSweepData).sid;
-                    const dstId = (dst as unknown as Sweep.ObservableSweepData).sid;
+                //     const srcId = (src as unknown as Sweep.ObservableSweepData).sid;
+                //     const dstId = (dst as unknown as Sweep.ObservableSweepData).sid;
     
-                    if (srcId === currentSweep.sid && allowedSweepIds.includes(dstId) && weight > maxDistance) {
-                        maxDistance = weight;
-                        farthestSweep = filteredSweeps.find((sweep) => sweep.sid === dstId) || null;
-                    }
-                }
+                //     if (srcId === currentSweep.sid && allowedSweepIds.includes(dstId) && weight > maxDistance) {
+                //         maxDistance = weight;
+                //         farthestSweep = filteredSweeps.find((sweep) => sweep.sid === dstId) || null;
+                //     }
+                // }
 
-                console.log("Farthest Sweep:", farthestSweep);
+                // console.log("Farthest Sweep:", farthestSweep);
 
-                const tagPosition = farthestSweep ? farthestSweep.position : {x: 1, y: 1, z: 1};
-                console.log("Tag position:", tagPosition);
+                // const tagPosition = farthestSweep ? farthestSweep.position : {x: 1, y: 1, z: 1};
+                // console.log("Tag position:", tagPosition);
+                const farSweep = findMaxSweep(filteredSweeps);
+                const tagPosition = farSweep?.position;
+                setOfficeSweep(farSweep);
+                
 
                 const newTag: MpSdk.Tag.Descriptor[] = [{
                     label: 'Office',
                     anchorPosition: {
-                        x: 60.89,
-                        y: 3,
-                        z: -4.7,
+                        x: tagPosition?.x || 0,
+                        y: 1,
+                        z: tagPosition?.z || 0,
                     },
                     stemVector: {
                         x: 0,
@@ -144,11 +148,24 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         }
     }, [allSweeps])
 
-    useEffect(()=>{
-        if(allSweeps && mpSdk){
+    const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]) => {
+        if (!sweeps.length) return null;
+      
+        sweeps.sort((a, b) => {
+          if (b.position.x === a.position.x) {
+            return b.position.z - a.position.z;
+          }
+          return b.position.x - a.position.x;
+        });
+      
+        return sweeps[0];
+    };
+
+    useEffect(() => {
+        if(filteredSweeps.length > 0 && mpSdk){
             addTagToFarRoom(mpSdk);
         }
-    }, [allSweeps, mpSdk])
+    }, [filteredSweeps, mpSdk])
 
     return {
         sdk: mpSdk,

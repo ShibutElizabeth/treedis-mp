@@ -28,7 +28,6 @@ const ThreeModel = () => {
         const lightD = new THREE.DirectionalLight('#ffffff');
         lightD.position.set(2, 10, 2);
         scene.add(lightD);
-        // const geometry = new THREE.PlaneGeometry(1, 1);
     
         const chairSeatMaterial = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color('#8a806d'),
