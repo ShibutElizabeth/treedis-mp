@@ -10,22 +10,14 @@ const calculateYRotation = (currentPos: Position, targetPos: Position): number =
         z: targetPos.z - currentPos.z
     };
 
-    const yRotation = ((toDegrees(Math.atan2(dx, dz)) + 360) % 360) - 180;
-
-    return yRotation;
+    return ((toDegrees(Math.atan2(dx, dz)) + 360) % 360) - 180;
 };
 
-const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]): Sweep.ObservableSweepData | null => {
-    if (!sweeps.length) return null;
-      
-    sweeps.sort((a, b) => {
-        if (b.position.x === a.position.x) {
-            return b.position.z - a.position.z;
-        }
-        return b.position.x - a.position.x;
-    });
-      
-    return sweeps[0]; 
-};
+const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]): Sweep.ObservableSweepData | null =>
+    sweeps.reduce((max, sweep) =>
+        (sweep.position.x > max.position.x ||
+            (sweep.position.x === max.position.x && sweep.position.z > max.position.z))
+            ? sweep : max
+    );
 
 export { delay, calculateYRotation, findMaxSweep };

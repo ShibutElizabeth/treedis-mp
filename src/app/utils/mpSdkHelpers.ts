@@ -1,18 +1,4 @@
 import { MpSdk, Sweep } from "../../../public/showcase-bundle/sdk";
-import { WindowWithMP_SDK } from "../types/matterport";
-
-export const initMatterport = async (
-    showcaseWindow: WindowWithMP_SDK,
-    setMpSdk: (sdk: MpSdk) => void
-) => {
-    try {
-        const mpSdk = await showcaseWindow.MP_SDK.connect(showcaseWindow) as MpSdk;
-        setMpSdk(mpSdk);
-        console.log("Hello Bundle SDK", mpSdk);
-    } catch (e) {
-        console.error("Failed to initialize Matterport SDK:", e);
-    }
-};
 
 export const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]) =>
     sweeps.reduce((max, sweep) =>

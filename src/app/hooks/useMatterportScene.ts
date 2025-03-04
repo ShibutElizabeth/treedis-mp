@@ -5,25 +5,25 @@ import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
 import { WindowWithMP_SDK } from "../types/matterport";
 import { delay, calculateYRotation, findMaxSweep } from "../utils/calculations";
 import { ToOffice } from "../types/utils";
+import { addTagToFarRoom } from "../utils/mpSdkHelpers";
+
+const SWEEP_FLOOR = 1;
+const CAMERA_SPEED = 70;
+const TRANSITION_TIME = 3500;
 
 export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
     const [currentSweep, setCurrentSweep] = useState<Sweep.ObservableSweepData | null>(null);
     const [officeSweep, setOfficeSweep] = useState<Sweep.ObservableSweepData | null>(null);
-    const [allSweeps, setAllSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [filteredSweeps, setFilteredSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
 
     useEffect(() => {
-        if (!iframeRef.current){ 
-            return;
-        }
+        if (!iframeRef.current) return;
 
         const showcase = document.getElementById('showcase') as HTMLIFrameElement;
         
-        if (!showcase) {
-            return;
-        }
+        if (!showcase) return;
         
         const showcaseWindow = showcase.contentWindow as WindowWithMP_SDK;
 
@@ -52,82 +52,32 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         };
     }, []);
 
-    const addTagToFarRoom = async (sdk: MpSdk) => {
-        try {
-            if(filteredSweeps.length > 0){
-                const farSweep = findMaxSweep(filteredSweeps);
-                const tagPosition = farSweep?.position;
-                setOfficeSweep(farSweep);
-                
-                const newTag: MpSdk.Tag.Descriptor[] = [{
-                    label: 'Office',
-                    anchorPosition: {
-                        x: tagPosition?.x || 0,
-                        y: 1,
-                        z: tagPosition?.z || 0,
-                    },
-                    stemVector: {
-                        x: 0,
-                        y: 0.1,
-                        z: 0,
-                    },
-                    color: {
-                        r: 1.0,
-                        g: 0.0,
-                        b: 1.0,
-                    }
-                }];
-
-                await sdk.Tag.add(...newTag);
-            }
-            
-        } catch (e) {
-            console.error("Failed to add tag: ", e);
-        }
-    };
-
     useEffect(() => {
-        if(!mpSdk){
-            return;
-        }
-        
-        const logCameraPose = () => {
-            mpSdk.Camera.pose.subscribe((pose) => {
-                setCameraPose(pose);
-            });
-        };
-    
-        const logCurrentSweep = () => {
-            mpSdk.Sweep.current.subscribe((sweep) => {
-                setCurrentSweep(sweep);
-            });
-        };
+        if (!mpSdk) return;
 
-        const logAllSweeps = () => {
-            mpSdk.Sweep.data.subscribe({
-                onCollectionUpdated: (sweeps) => {
-                    setAllSweeps(Object.values(sweeps));
-                }
-            });
-        }
-
-        logCameraPose();
-        logCurrentSweep();
-        logAllSweeps();
+        mpSdk.Camera.pose.subscribe(setCameraPose);
+        mpSdk.Sweep.current.subscribe(setCurrentSweep);
+        mpSdk.Sweep.data.subscribe({
+            onCollectionUpdated: (sweeps) => {
+                setFilteredSweeps(Object.values(sweeps).filter((sweep) => sweep.floorInfo.sequence === SWEEP_FLOOR));
+            },
+        });
     }, [mpSdk]);
 
     useEffect(() => {
-        if(allSweeps.length > 0){
-            const filtered = allSweeps?.filter((sweep) => sweep.floorInfo.sequence === 1);
-            setFilteredSweeps(filtered);
+        if (filteredSweeps.length > 0 && mpSdk) {
+            const farSweep = findMaxSweep(filteredSweeps);
+
+            if(farSweep){
+                setOfficeSweep(farSweep);
+                addTagToFarRoom(mpSdk, farSweep);
+            }   
         }
 
-    }, [allSweeps])
+    }, [filteredSweeps, mpSdk]);
 
     const teleportToOffice = async() => {
-        if(!mpSdk || !officeSweep){
-            return;
-        }
+        if(!mpSdk || !officeSweep) return;
 
         await mpSdk.Sweep.moveTo(officeSweep.id, {
             transition: mpSdk.Sweep.Transition.INSTANT,
@@ -135,9 +85,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     }
 
     const navigateToOffice = async () => {
-        if (!currentSweep || !officeSweep || !cameraPose || !mpSdk){
-            return;
-        }
+        if (!currentSweep || !officeSweep || !cameraPose || !mpSdk) return;
     
         const { id: currentSweepId } = currentSweep;
         const { id: officeSweepId } = officeSweep;
@@ -156,45 +104,23 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
                 x: cameraPose.rotation.x, 
                 y: yRotation 
             }, { 
-                speed: 70 
+                speed: CAMERA_SPEED 
             });
     
             await mpSdk.Sweep.moveTo(id, {
                 transition: mpSdk.Sweep.Transition.FLY,
-                transitionTime: 3500,
+                transitionTime: TRANSITION_TIME,
             });
     
-            await delay(500);
+            await delay(TRANSITION_TIME / 7);
         }
     };
     
 
     const toOffice = async (walkingStyle: ToOffice) => {
-        if(!currentSweep || !officeSweep || !cameraPose || !mpSdk){
-            return;
-        }
-
-        switch (walkingStyle){
-            case ToOffice.NAVIGATE: 
-                navigateToOffice();
-                break;
-
-            case ToOffice.TELEPORT:
-                teleportToOffice();
-                break;
-
-            default:
-                () => { console.log('No options were selected'); }
-                break;
-        }        
+        if (walkingStyle === ToOffice.NAVIGATE) await navigateToOffice();
+        if (walkingStyle === ToOffice.TELEPORT) await teleportToOffice();
     };
-
-    useEffect(() => {
-        if(filteredSweeps.length > 0 && mpSdk){
-            addTagToFarRoom(mpSdk);
-        }
-
-    }, [filteredSweeps, mpSdk])
 
     return {
         sdk: mpSdk,
