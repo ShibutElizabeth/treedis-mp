@@ -3,7 +3,8 @@
 import { RefObject, useEffect, useState } from "react";
 import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
 import { WindowWithMP_SDK } from "../types/matterport";
-import { delay, calculateRotation, findMaxSweep } from "../utils/calculations";
+import { delay, calculateYRotation, findMaxSweep } from "../utils/calculations";
+import { ToOffice } from "../types/utils";
 
 export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
@@ -124,7 +125,9 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     }, [allSweeps])
 
     const teleportToOffice = async() => {
-        if(!mpSdk || !officeSweep) return;
+        if(!mpSdk || !officeSweep){
+            return;
+        }
 
         await mpSdk.Sweep.moveTo(officeSweep.id, {
             transition: mpSdk.Sweep.Transition.INSTANT,
@@ -132,33 +135,58 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     }
 
     const navigateToOffice = async () => {
-        if(!currentSweep || !officeSweep || !cameraPose || !mpSdk) return;
-
-        const currentSweepId: string = currentSweep.id;
-        const officeSweepId: string = officeSweep.id;
-
+        if (!currentSweep || !officeSweep || !cameraPose || !mpSdk){
+            return;
+        }
+    
+        const { id: currentSweepId } = currentSweep;
+        const { id: officeSweepId } = officeSweep;
+    
         const sweepGraph = await mpSdk.Sweep.createGraph();
         const path = mpSdk.Graph.createAStarRunner(
             sweepGraph,
             sweepGraph.vertex(currentSweepId)!,
             sweepGraph.vertex(officeSweepId)!
-        ).exec().path;
+        ).exec().path.slice(1); 
 
-        path.shift();
-
-        for (const vertex of path) {
-            const y = calculateRotation(cameraPose.position, vertex.data.position).y;
-
-            await Promise.all([
-                mpSdk.Camera.setRotation({ x: cameraPose.rotation.x, y }, { speed: 70 }),
-                mpSdk.Sweep.moveTo(vertex.data.id, {
-                    transition: mpSdk.Sweep.Transition.FLY,
-                    transitionTime: 3300
-                })
-            ]);
-
+        for (const { data: { id, position } } of path) {
+            const yRotation = calculateYRotation(cameraPose.position, position);
+    
+            await mpSdk.Camera.setRotation({ 
+                x: cameraPose.rotation.x, 
+                y: yRotation 
+            }, { 
+                speed: 70 
+            });
+    
+            await mpSdk.Sweep.moveTo(id, {
+                transition: mpSdk.Sweep.Transition.FLY,
+                transitionTime: 3500,
+            });
+    
             await delay(500);
         }
+    };
+    
+
+    const toOffice = async (walkingStyle: ToOffice) => {
+        if(!currentSweep || !officeSweep || !cameraPose || !mpSdk){
+            return;
+        }
+
+        switch (walkingStyle){
+            case ToOffice.NAVIGATE: 
+                navigateToOffice();
+                break;
+
+            case ToOffice.TELEPORT:
+                teleportToOffice();
+                break;
+
+            default:
+                () => { console.log('No options were selected'); }
+                break;
+        }        
     };
 
     useEffect(() => {
@@ -173,7 +201,6 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         cameraPose: cameraPose,
         currentSweep: currentSweep,
         sweeps: filteredSweeps,
-        teleportToOffice: teleportToOffice,
-        navigateToOffice: navigateToOffice,
+        toOffice: toOffice
     };
 };
