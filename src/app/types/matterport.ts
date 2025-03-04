@@ -10,5 +10,7 @@ export type MatterportContextType = {
     sdk: MpSdk | null;
     cameraPose: Camera.Pose | null,
     currentSweep: Sweep.ObservableSweepData | null,
-    sweeps: Sweep.ObservableSweepData[]
+    sweeps: Sweep.ObservableSweepData[],
+    teleportToOffice: () => void,
+    navigateToOffice: () => void
 };

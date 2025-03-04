@@ -1,8 +1,9 @@
 "use client";
 
 import { RefObject, useEffect, useState } from "react";
-import { MpSdk, Camera, Sweep, Tag } from "../../../public/showcase-bundle/sdk";
+import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
 import { WindowWithMP_SDK } from "../types/matterport";
+import { delay, calculateRotation, findMaxSweep } from "../utils/calculations";
 
 export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
@@ -53,34 +54,10 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     const addTagToFarRoom = async (sdk: MpSdk) => {
         try {
             if(filteredSweeps.length > 0){
-                // const graph = await sdk.Sweep.createGraph();
-                
-                // const allowedSweepIds = filteredSweeps.map((sweep) => sweep.sid);
-                // console.log(filteredSweeps)
-                // let farthestSweep: Sweep.ObservableSweepData | null = filteredSweeps[0];
-                // let maxDistance = 0;
-
-                // for (const edge of graph.edges) {
-                //     const { src, dst, weight } = edge;
-    
-                //     const srcId = (src as unknown as Sweep.ObservableSweepData).sid;
-                //     const dstId = (dst as unknown as Sweep.ObservableSweepData).sid;
-    
-                //     if (srcId === currentSweep.sid && allowedSweepIds.includes(dstId) && weight > maxDistance) {
-                //         maxDistance = weight;
-                //         farthestSweep = filteredSweeps.find((sweep) => sweep.sid === dstId) || null;
-                //     }
-                // }
-
-                // console.log("Farthest Sweep:", farthestSweep);
-
-                // const tagPosition = farthestSweep ? farthestSweep.position : {x: 1, y: 1, z: 1};
-                // console.log("Tag position:", tagPosition);
                 const farSweep = findMaxSweep(filteredSweeps);
                 const tagPosition = farSweep?.position;
                 setOfficeSweep(farSweep);
                 
-
                 const newTag: MpSdk.Tag.Descriptor[] = [{
                     label: 'Office',
                     anchorPosition: {
@@ -116,14 +93,12 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         const logCameraPose = () => {
             mpSdk.Camera.pose.subscribe((pose) => {
                 setCameraPose(pose);
-                // console.log("Current Camera Position:", pose.position);
             });
         };
     
         const logCurrentSweep = () => {
             mpSdk.Sweep.current.subscribe((sweep) => {
                 setCurrentSweep(sweep);
-                console.log("Current Sweep Position:", sweep.position);
             });
         };
 
@@ -138,7 +113,6 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         logCameraPose();
         logCurrentSweep();
         logAllSweeps();
-
     }, [mpSdk]);
 
     useEffect(() => {
@@ -146,31 +120,60 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
             const filtered = allSweeps?.filter((sweep) => sweep.floorInfo.sequence === 1);
             setFilteredSweeps(filtered);
         }
+
     }, [allSweeps])
 
-    const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]) => {
-        if (!sweeps.length) return null;
-      
-        sweeps.sort((a, b) => {
-          if (b.position.x === a.position.x) {
-            return b.position.z - a.position.z;
-          }
-          return b.position.x - a.position.x;
+    const teleportToOffice = async() => {
+        if(!mpSdk || !officeSweep) return;
+
+        await mpSdk.Sweep.moveTo(officeSweep.id, {
+            transition: mpSdk.Sweep.Transition.INSTANT,
         });
-      
-        return sweeps[0];
+    }
+
+    const navigateToOffice = async () => {
+        if(!currentSweep || !officeSweep || !cameraPose || !mpSdk) return;
+
+        const currentSweepId: string = currentSweep.id;
+        const officeSweepId: string = officeSweep.id;
+
+        const sweepGraph = await mpSdk.Sweep.createGraph();
+        const path = mpSdk.Graph.createAStarRunner(
+            sweepGraph,
+            sweepGraph.vertex(currentSweepId)!,
+            sweepGraph.vertex(officeSweepId)!
+        ).exec().path;
+
+        path.shift();
+
+        for (const vertex of path) {
+            const y = calculateRotation(cameraPose.position, vertex.data.position).y;
+
+            await Promise.all([
+                mpSdk.Camera.setRotation({ x: cameraPose.rotation.x, y }, { speed: 70 }),
+                mpSdk.Sweep.moveTo(vertex.data.id, {
+                    transition: mpSdk.Sweep.Transition.FLY,
+                    transitionTime: 3300
+                })
+            ]);
+
+            await delay(500);
+        }
     };
 
     useEffect(() => {
         if(filteredSweeps.length > 0 && mpSdk){
             addTagToFarRoom(mpSdk);
         }
+
     }, [filteredSweeps, mpSdk])
 
     return {
         sdk: mpSdk,
         cameraPose: cameraPose,
         currentSweep: currentSweep,
-        sweeps: filteredSweeps
+        sweeps: filteredSweeps,
+        teleportToOffice: teleportToOffice,
+        navigateToOffice: navigateToOffice,
     };
 };
