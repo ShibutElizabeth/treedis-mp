@@ -9,5 +9,5 @@ export type WindowWithMP_SDK = Window & {
 export type MatterportContextType = {
     sdk: MpSdk | null;
     cameraPose: Camera.Pose | null,
-    currentSweep: Sweep.ObservableSweepData | null,
+    currentSweep: Sweep.ObservableSweepData | null
 };

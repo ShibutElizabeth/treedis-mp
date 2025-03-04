@@ -3,15 +3,19 @@
 import { useRef } from "react";
 import { useMatterportScene } from "../hooks/useMatterportScene";
 import { MatterportContext } from "./MatterportContext";
+import ThreeModel from "./ThreeModel";
 import styles from "@/app/page.module.css";
 
 const MatterportOverlay = ({ children }: { children: React.ReactNode | null }) => {
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
     const matterportScene = useMatterportScene(iframeRef);
+    const {sdk} = matterportScene;
 
     return (
         <div className={styles.container}>
-            <MatterportContext.Provider value={matterportScene}>{children}</MatterportContext.Provider>
+            <MatterportContext.Provider value={matterportScene}>
+                <ThreeModel sdk={sdk} />
+            </MatterportContext.Provider>
             <iframe
                 id="showcase"
                 ref={iframeRef}
