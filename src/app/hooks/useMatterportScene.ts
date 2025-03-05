@@ -56,13 +56,19 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     useEffect(() => {
         if (!mpSdk) return;
 
-        mpSdk.Camera.pose.subscribe(setCameraPose);
-        mpSdk.Sweep.current.subscribe(setCurrentSweep);
-        mpSdk.Sweep.data.subscribe({
+        const poseSubscription = mpSdk.Camera.pose.subscribe(setCameraPose);
+        const sweepSubscription = mpSdk.Sweep.current.subscribe(setCurrentSweep);
+        const sweepDataSubscription = mpSdk.Sweep.data.subscribe({
             onCollectionUpdated: (sweeps) => {
                 setFilteredSweeps(Object.values(sweeps).filter((sweep) => sweep.floorInfo.sequence === SWEEP_FLOOR));
             },
         });
+
+        return () => {
+            poseSubscription.cancel();
+            sweepSubscription.cancel();
+            sweepDataSubscription.cancel();
+        };
     }, [mpSdk]);
 
     useEffect(() => {
