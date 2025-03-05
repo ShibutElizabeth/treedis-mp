@@ -11,6 +11,7 @@
     transform: translateY(-100%);
     transition: all 0.3s ease;
 }
+
 .menuContainer{
     width: 100%;
     height: fit-content;
@@ -67,4 +68,18 @@
 .up{
     transition: all 0.3s ease;
     transform: rotateX(180deg);
+}
+
+@media (max-width: 768px) {
+    .menu{
+        width: 48vw;
+    }
+
+    .hideBar {
+        height: 2vh;
+    }
+
+    .menuOption:hover {
+        opacity: 0.5;
+    }
 }
