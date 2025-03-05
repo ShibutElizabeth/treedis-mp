@@ -113,7 +113,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         const result = aStarRunner.exec();
         
         if (result.status === mpSdk.Graph.AStarStatus.SUCCESS) {
-            path.push(...result.path.slice(1))
+            path.push(...result.path)
         }
 
         const dotPositions: MpSdk.Vector3[] = [];
@@ -128,8 +128,6 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
             dotPositions.push(...interpolatedPositions);
             counter += 1;
         }
-
-        updatePositions(currentSweep, path[0].data);
 
         for (let i = 0; i < path.length - 1; i++) {
             updatePositions(path[i].data, path[i + 1].data);
