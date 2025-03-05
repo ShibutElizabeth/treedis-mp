@@ -7,7 +7,7 @@ import {
     MeshBasicMaterial,
     Mesh
 } from "three";
-import { useMatterportContext } from "@/app/hooks/useMatterportContext";
+import { useMatterportContext } from "@/app/components/matterport/hooks/useMatterportContext";
 import { addModelToMatterport, getBlobUrl } from "../../utils/helpers";
 
 const BlueDotPath = () => {

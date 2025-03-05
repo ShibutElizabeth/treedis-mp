@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { MatterportContext } from "../components/matterport/MatterportContext";
+import { MatterportContext } from "../MatterportContext";
 
 export const useMatterportContext = () => {
     const context = useContext(MatterportContext);

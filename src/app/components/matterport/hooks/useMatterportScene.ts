@@ -1,15 +1,13 @@
 "use client";
 
 import { RefObject, useEffect, useState } from "react";
-import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
-import { WindowWithMP_SDK } from "../types/matterport";
-import { delay, calculateYRotation, findMaxSweep, interpolatePositions } from "../utils/calculations";
-import { ToOffice } from "../types/utils";
-import { addTagToFarRoom } from "../utils/helpers";
+import { MpSdk, Camera, Sweep } from "../../../../../public/showcase-bundle/sdk";
+import { WindowWithMP_SDK } from "../../../types/matterport";
+import { delay, calculateYRotation, findMaxSweep, interpolatePositions } from "../../../utils/calculations";
+import { ToOffice } from "../../../types/utils";
+import { addTagToFarRoom } from "../../../utils/helpers";
+import { TRANSITION_TIME, SWEEP_FLOOR, CAMERA_SPEED } from "../../../utils/constants";
 
-const SWEEP_FLOOR = 1;
-const CAMERA_SPEED = 70;
-const TRANSITION_TIME = 3500;
 
 export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null>) => {
     const [mpSdk, setMpSdk] = useState<MpSdk | null>(null);
@@ -102,13 +100,21 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
         const { id: currentSweepId } = currentSweep;
         const { id: officeSweepId } = officeSweep;
+
+        let path: MpSdk.Graph.Vertex<MpSdk.Sweep.ObservableSweepData>[] = [];
     
         const sweepGraph = await mpSdk.Sweep.createGraph();
-        const path = mpSdk.Graph.createAStarRunner(
+
+        const aStarRunner = mpSdk.Graph.createAStarRunner(
             sweepGraph,
             sweepGraph.vertex(currentSweepId)!,
-            sweepGraph.vertex(officeSweepId)!
-        ).exec().path.slice(1); 
+            sweepGraph.vertex(officeSweepId)!);
+
+        const result = aStarRunner.exec();
+        
+        if (result.status === mpSdk.Graph.AStarStatus.SUCCESS) {
+            path.push(...result.path.slice(1))
+        }
 
         const dotPositions: MpSdk.Vector3[] = [];
         const segments = 0.5;

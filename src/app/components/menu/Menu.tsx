@@ -1,21 +1,16 @@
 "use client";
 
-import { MenuItem, ToOffice } from "@/app/types/utils";
 import styles from "./menu.module.css";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MenuOption } from "./MenuOption";
-import { useMatterportContext } from "@/app/hooks/useMatterportContext";
+import { useMatterportContext } from "@/app/components/matterport/hooks/useMatterportContext";
+import { menuItemsData } from "@/app/utils/data";
 
 export const Menu = () => {
     const { sdk } = useMatterportContext();
     const [searchTerm, setSearchTerm] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-
-    const menuItemsData: MenuItem[] = [
-        { title: "Teleport to office", walkingStyle: ToOffice.TELEPORT },
-        { title: "Navigate to office", walkingStyle: ToOffice.NAVIGATE },
-    ];
 
     const filteredItems = menuItemsData.filter(({ title }) =>
         title.toLowerCase().includes(searchTerm.toLowerCase())

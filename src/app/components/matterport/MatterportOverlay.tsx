@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useMatterportScene } from "../../hooks/useMatterportScene";
+import { useMatterportScene } from "./hooks/useMatterportScene";
 import { MatterportContext } from "./MatterportContext";
 import ThreeModel from "../three/ThreeModel";
 import styles from "@/app/page.module.css";

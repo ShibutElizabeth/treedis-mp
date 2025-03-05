@@ -9,7 +9,7 @@ import {
     Object3D
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { useMatterportContext } from "@/app/hooks/useMatterportContext";
+import { useMatterportContext } from "@/app/components/matterport/hooks/useMatterportContext";
 import { addModelToMatterport, getBlobUrl } from "../../utils/helpers";
 
 const ThreeModel = () => {

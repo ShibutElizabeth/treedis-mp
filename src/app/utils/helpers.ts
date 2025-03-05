@@ -2,13 +2,6 @@ import { MpSdk, Sweep } from "../../../public/showcase-bundle/sdk";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import * as THREE from "three";
 
-export const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]) =>
-    sweeps.reduce((max, sweep) =>
-        (sweep.position.x > max.position.x ||
-            (sweep.position.x === max.position.x && sweep.position.z > max.position.z))
-            ? sweep : max
-    );
-
 export const addTagToFarRoom = async (sdk: MpSdk, farSweep: Sweep.ObservableSweepData) => {
     try {
         await sdk.Tag.add({
@@ -37,6 +30,7 @@ export const addModelToMatterport = async (
         modelNode.start();
 
         console.log("3D model has been added to Matterport");
+
         return modelNode;
     } catch (error) {
         console.error("Error adding a 3D model:", error);
