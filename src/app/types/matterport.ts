@@ -13,5 +13,6 @@ export type MatterportContextType = {
     currentSweep: Sweep.ObservableSweepData | null,
     sweeps: Sweep.ObservableSweepData[],
     pathPositions: MpSdk.Vector3[],
+    blueDotsModelNodes: MpSdk.Scene.INode[],
     toOffice: (walkingStyle: ToOffice) => void
 };

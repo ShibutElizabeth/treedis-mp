@@ -6,7 +6,7 @@ import { useMatterportContext } from "@/app/hooks/useMatterportContext";
 import { addModelToMatterport, getBlobUrl } from "../../utils/helpers";
 
 const BlueDotPath = () => {
-    const {sdk, pathPositions} = useMatterportContext();
+    const {sdk, pathPositions, blueDotsModelNodes} = useMatterportContext();
 
     useEffect(() => {
         if (!sdk || pathPositions.length === 0) return;
@@ -24,7 +24,10 @@ const BlueDotPath = () => {
         (async () => {
             try {
                 const gltfUrl = await getBlobUrl(scene);
-                await addModelToMatterport(sdk, gltfUrl, {x: 0, y: 0, z: 0});
+                const modelNode = await addModelToMatterport(sdk, gltfUrl, {x: 0, y: 0, z: 0});
+                
+                if(modelNode) blueDotsModelNodes.push(modelNode);
+                
             } catch (error) {
                 console.error("Error adding spheres to Matterport:", error);
             }

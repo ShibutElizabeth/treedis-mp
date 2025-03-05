@@ -7,5 +7,6 @@ export const MatterportContext = createContext<MatterportContextType>({
     currentSweep: null,
     sweeps: [],
     pathPositions: [],
+    blueDotsModelNodes: [],
     toOffice: () => {},
 });

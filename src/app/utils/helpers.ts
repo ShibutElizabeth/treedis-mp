@@ -22,7 +22,11 @@ export const addTagToFarRoom = async (sdk: MpSdk, farSweep: Sweep.ObservableSwee
     }
 };
 
-export const addModelToMatterport = async (sdk: MpSdk, gltfUrl: string, position: MpSdk.Vector3) => {
+export const addModelToMatterport = async (
+    sdk: MpSdk,
+    gltfUrl: string,
+    position: MpSdk.Vector3
+): Promise<MpSdk.Scene.INode | null> => {
     try {
         const [sceneObject] = await sdk.Scene.createObjects(1);
         const modelNode = sceneObject.addNode();
@@ -33,10 +37,12 @@ export const addModelToMatterport = async (sdk: MpSdk, gltfUrl: string, position
         modelNode.start();
 
         console.log("3D model has been added to Matterport");
+        return modelNode;
     } catch (error) {
         console.error("Error adding a 3D model:", error);
+        return null;
     }
-};
+}
 
 export const getBlobUrl = async (scene: THREE.Scene): Promise<string> => {
     return new Promise((resolve, reject) => {

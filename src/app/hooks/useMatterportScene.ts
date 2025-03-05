@@ -18,6 +18,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     const [filteredSweeps, setFilteredSweeps] = useState<Sweep.ObservableSweepData[]>([]);
     const [pathPositions, setPathPositions] = useState<MpSdk.Vector3[]>([]);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
+    const [blueDotsModelNodes, setBlueDotsModelNodes] = useState<MpSdk.Scene.INode[]>([]);
     const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
@@ -58,7 +59,10 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         if (!mpSdk) return;
 
         const poseSubscription = mpSdk.Camera.pose.subscribe(setCameraPose);
-        const sweepSubscription = mpSdk.Sweep.current.subscribe(setCurrentSweep);
+        const sweepSubscription = mpSdk.Sweep.current.subscribe((sweep) => {
+            setCurrentSweep(sweep);
+            
+        });
         const sweepDataSubscription = mpSdk.Sweep.data.subscribe({
             onCollectionUpdated: (sweeps) => {
                 setFilteredSweeps(Object.values(sweeps).filter((sweep) => sweep.floorInfo.sequence === SWEEP_FLOOR));
@@ -128,24 +132,26 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
         setPathPositions(dotPositions);
 
-        for (const { data: { id, position } } of path) {
-            const yRotation = calculateYRotation(cameraPose.position, position);
+        try {
+            for (const { data: { id, position } } of path) {
+                const yRotation = calculateYRotation(cameraPose.position, position);
     
-            await mpSdk.Camera.setRotation({ 
-                x: cameraPose.rotation.x, 
-                y: yRotation 
-            }, { 
-                speed: CAMERA_SPEED 
-            });
+                await mpSdk.Camera.setRotation(
+                    { x: cameraPose.rotation.x, y: yRotation },
+                    { speed: CAMERA_SPEED }
+                );
     
-            await mpSdk.Sweep.moveTo(id, {
-                transition: mpSdk.Sweep.Transition.FLY,
-                transitionTime: TRANSITION_TIME,
-            }).finally(() => {
-                setIsPlaying(false);
-            });
+                await mpSdk.Sweep.moveTo(id, {
+                    transition: mpSdk.Sweep.Transition.FLY,
+                    transitionTime: TRANSITION_TIME,
+                });
     
-            await delay(TRANSITION_TIME / 7);
+                await delay(TRANSITION_TIME / 7);
+            }
+        } finally {
+            setIsPlaying(false);
+            blueDotsModelNodes.forEach(node => node.stop());
+            setBlueDotsModelNodes([]);
         }
     };
 
@@ -161,6 +167,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         currentSweep: currentSweep,
         sweeps: filteredSweeps,
         pathPositions: pathPositions,
+        blueDotsModelNodes: blueDotsModelNodes,
         toOffice: toOffice
     };
 };
