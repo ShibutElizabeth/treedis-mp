@@ -5,7 +5,7 @@ import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
 import { WindowWithMP_SDK } from "../types/matterport";
 import { delay, calculateYRotation, findMaxSweep } from "../utils/calculations";
 import { ToOffice } from "../types/utils";
-import { addTagToFarRoom } from "../utils/mpSdkHelpers";
+import { addTagToFarRoom } from "../utils/helpers";
 
 const SWEEP_FLOOR = 1;
 const CAMERA_SPEED = 70;

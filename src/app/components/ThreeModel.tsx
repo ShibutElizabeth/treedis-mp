@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { MpSdk } from "../../../public/showcase-bundle/sdk";
 import { useMatterportContext } from "../hooks/UseMatterportContext";
+import { addModelToMatterport, getBlobUrl } from "../utils/helpers";
 
 const ThreeModel = () => {
     const [gltfUrl, setGltfUrl] = useState<string | null>(null);
@@ -23,9 +22,6 @@ const ThreeModel = () => {
 
     const generateGLB = async () => {
         const scene = new THREE.Scene();
-        const ambientLight = new THREE.AmbientLight('#fec76f');
-        ambientLight.position.set(2, 2, 2);
-        scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight('#ffffff', 10);
         directionalLight.position.set(2, 5, 2);
@@ -74,42 +70,11 @@ const ThreeModel = () => {
             const model = await loadModel();
             scene.add(model);
             console.log("3D model has been loaded: ", model);
-    
-            const exporter = new GLTFExporter();
-            exporter.parse(
-                scene,
-                (gltf) => {
-                    const blob = new Blob([JSON.stringify(gltf)], {
-                        type: "application/json",
-                    });
-    
-                    const blobUrl = URL.createObjectURL(blob);
-                    setGltfUrl(blobUrl);
-                    console.log("GLTF Blob URL: ", blobUrl);
-                },
-                (error) => {
-                    console.error("Export GLTF error: ", error);
-                }
-            );
+
+            const url = await getBlobUrl(scene);
+            setGltfUrl(url);
         } catch (error) {
             console.error("Loading model error: ", error);
-        }
-    };
-    
-
-    const addModelToMatterport = async (sdk: MpSdk, gltfUrl: string, position: MpSdk.Vector3) => {
-        try {
-            const [sceneObject] = await sdk.Scene.createObjects(1);
-            const modelNode = sceneObject.addNode();
-
-            modelNode.addComponent(sdk.Scene.Component.GLTF_LOADER, { url: gltfUrl });
-            modelNode.position.set(position.x, 0, position.z);
-    
-            modelNode.start();
-
-            console.log("3D model has been added to Matterport");
-        } catch (error) {
-            console.error("Error adding a 3D model:", error);
         }
     };
 
