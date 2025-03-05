@@ -46,7 +46,7 @@ export const Menu = () => {
         return () => {
             subscription.cancel();
         };
-    }, [sdk, toggleMenu]);
+    }, [sdk, menuRef.current]);
 
     return (
         <div ref={menuRef} className={styles.menu}>
