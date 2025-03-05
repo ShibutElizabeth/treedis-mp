@@ -20,8 +20,16 @@ const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]): Sweep.ObservableSwee
             ? sweep : max
     );
 
-const interpolatePositions = (start: MpSdk.Vector3, end: MpSdk.Vector3, segments: number) => {
+const interpolatePositions = (start: MpSdk.Vector3, end: MpSdk.Vector3, step: number) => {
     const positions: MpSdk.Vector3[] = [];
+
+    const distance = Math.sqrt(
+        Math.pow(end.x - start.x, 2) +
+        Math.pow(end.y - start.y, 2) +
+        Math.pow(end.z - start.z, 2)
+    );
+    const segments = Math.max(1, Math.floor(distance / step));
+
     for (let i = 0; i <= segments; i++) {
         const t = i / segments;
         positions.push({
@@ -30,6 +38,7 @@ const interpolatePositions = (start: MpSdk.Vector3, end: MpSdk.Vector3, segments
             z: start.z + t * (end.z - start.z),
         });
     }
+
     return positions;
 };
 

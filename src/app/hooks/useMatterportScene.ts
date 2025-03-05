@@ -114,7 +114,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         ).exec().path.slice(1); 
 
         const dotPositions: MpSdk.Vector3[] = [];
-        const segments = 10;
+        const segments = 0.5;
 
         const updatePositions = (startSweep: MpSdk.Sweep.ObservableSweepData, endSweep: MpSdk.Sweep.ObservableSweepData) => {
             const { position: startPos } = startSweep;
@@ -157,6 +157,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
     const toOffice = async (walkingStyle: ToOffice) => {
         if(isPlaying) return;
+
         if (walkingStyle === ToOffice.NAVIGATE) await navigateToOffice();
         if (walkingStyle === ToOffice.TELEPORT) await teleportToOffice();
     };
