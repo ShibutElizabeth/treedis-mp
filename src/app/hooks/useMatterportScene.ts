@@ -149,53 +149,6 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         }
     };
 
-    const navigateToOffices = async () => {
-        if (!currentSweep || !officeSweep || !cameraPose || !mpSdk) return;
-        setIsPlaying(true);
-
-        const { id: currentSweepId } = currentSweep;
-        const { id: officeSweepId } = officeSweep;
-    
-        const sweepGraph = await mpSdk.Sweep.createGraph();
-        const path = mpSdk.Graph.createAStarRunner(
-            sweepGraph,
-            sweepGraph.vertex(currentSweepId)!,
-            sweepGraph.vertex(officeSweepId)!
-        ).exec().path.slice(1); 
-
-        const dotPositions: MpSdk.Vector3[] = [];
-        const segments = 10;
-    
-        for (let i = 0; i < path.length - 1; i++) {
-            const { position: startPos } = path[i].data;
-            const { position: endPos } = path[i + 1].data;
-    
-            const interpolatedPositions = interpolatePositions(startPos, endPos, segments);
-            dotPositions.push(...interpolatedPositions);
-    
-            const yRotation = calculateYRotation(cameraPose.position, endPos);
-    
-            await mpSdk.Camera.setRotation({ 
-                x: cameraPose.rotation.x, 
-                y: yRotation 
-            }, { 
-                speed: CAMERA_SPEED 
-            });
-    
-            await mpSdk.Sweep.moveTo(path[i + 1].data.id, {
-                transition: mpSdk.Sweep.Transition.FLY,
-                transitionTime: TRANSITION_TIME,
-            }).finally(() => {
-                setIsPlaying(false);
-            });
-    
-            setPathPositions(dotPositions);
-            console.log(dotPositions)
-    
-            await delay(TRANSITION_TIME / 7);
-        }
-    };
-
     const toOffice = async (walkingStyle: ToOffice) => {
         if(isPlaying) return;
         if (walkingStyle === ToOffice.NAVIGATE) await navigateToOffice();
