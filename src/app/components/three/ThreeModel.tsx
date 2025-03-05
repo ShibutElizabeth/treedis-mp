@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { useMatterportContext } from "../hooks/UseMatterportContext";
-import { addModelToMatterport, getBlobUrl } from "../utils/helpers";
+import { useMatterportContext } from "@/app/hooks/useMatterportContext";
+import { addModelToMatterport, getBlobUrl } from "../../utils/helpers";
 
 const ThreeModel = () => {
     const [gltfUrl, setGltfUrl] = useState<string | null>(null);

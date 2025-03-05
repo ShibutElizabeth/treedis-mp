@@ -3,7 +3,7 @@
 import { RefObject, useEffect, useState } from "react";
 import { MpSdk, Camera, Sweep } from "../../../public/showcase-bundle/sdk";
 import { WindowWithMP_SDK } from "../types/matterport";
-import { delay, calculateYRotation, findMaxSweep } from "../utils/calculations";
+import { delay, calculateYRotation, findMaxSweep, interpolatePositions } from "../utils/calculations";
 import { ToOffice } from "../types/utils";
 import { addTagToFarRoom } from "../utils/helpers";
 
@@ -16,6 +16,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     const [currentSweep, setCurrentSweep] = useState<Sweep.ObservableSweepData | null>(null);
     const [officeSweep, setOfficeSweep] = useState<Sweep.ObservableSweepData | null>(null);
     const [filteredSweeps, setFilteredSweeps] = useState<Sweep.ObservableSweepData[]>([]);
+    const [pathPositions, setPathPositions] = useState<MpSdk.Vector3[]>([]);
     const [cameraPose, setCameraPose] = useState<Camera.Pose | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -85,6 +86,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
     const teleportToOffice = async() => {
         if(!mpSdk || !officeSweep) return;
+        setIsPlaying(true);
 
         await mpSdk.Sweep.moveTo(officeSweep.id, {
             transition: mpSdk.Sweep.Transition.INSTANT,
@@ -95,7 +97,8 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
     const navigateToOffice = async () => {
         if (!currentSweep || !officeSweep || !cameraPose || !mpSdk) return;
-    
+        setIsPlaying(true);
+
         const { id: currentSweepId } = currentSweep;
         const { id: officeSweepId } = officeSweep;
     
@@ -105,6 +108,25 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
             sweepGraph.vertex(currentSweepId)!,
             sweepGraph.vertex(officeSweepId)!
         ).exec().path.slice(1); 
+
+        const dotPositions: MpSdk.Vector3[] = [];
+        const segments = 10;
+
+        const updatePositions = (startSweep: MpSdk.Sweep.ObservableSweepData, endSweep: MpSdk.Sweep.ObservableSweepData) => {
+            const { position: startPos } = startSweep;
+            const { position: endPos } = endSweep;
+
+            const interpolatedPositions = interpolatePositions(startPos, endPos, segments);
+            dotPositions.push(...interpolatedPositions);
+        }
+
+        updatePositions(currentSweep, path[0].data);
+
+        for (let i = 0; i < path.length - 1; i++) {
+            updatePositions(path[i].data, path[i + 1].data);
+        }
+
+        setPathPositions(dotPositions);
 
         for (const { data: { id, position } } of path) {
             const yRotation = calculateYRotation(cameraPose.position, position);
@@ -126,11 +148,56 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
             await delay(TRANSITION_TIME / 7);
         }
     };
+
+    const navigateToOffices = async () => {
+        if (!currentSweep || !officeSweep || !cameraPose || !mpSdk) return;
+        setIsPlaying(true);
+
+        const { id: currentSweepId } = currentSweep;
+        const { id: officeSweepId } = officeSweep;
     
+        const sweepGraph = await mpSdk.Sweep.createGraph();
+        const path = mpSdk.Graph.createAStarRunner(
+            sweepGraph,
+            sweepGraph.vertex(currentSweepId)!,
+            sweepGraph.vertex(officeSweepId)!
+        ).exec().path.slice(1); 
+
+        const dotPositions: MpSdk.Vector3[] = [];
+        const segments = 10;
+    
+        for (let i = 0; i < path.length - 1; i++) {
+            const { position: startPos } = path[i].data;
+            const { position: endPos } = path[i + 1].data;
+    
+            const interpolatedPositions = interpolatePositions(startPos, endPos, segments);
+            dotPositions.push(...interpolatedPositions);
+    
+            const yRotation = calculateYRotation(cameraPose.position, endPos);
+    
+            await mpSdk.Camera.setRotation({ 
+                x: cameraPose.rotation.x, 
+                y: yRotation 
+            }, { 
+                speed: CAMERA_SPEED 
+            });
+    
+            await mpSdk.Sweep.moveTo(path[i + 1].data.id, {
+                transition: mpSdk.Sweep.Transition.FLY,
+                transitionTime: TRANSITION_TIME,
+            }).finally(() => {
+                setIsPlaying(false);
+            });
+    
+            setPathPositions(dotPositions);
+            console.log(dotPositions)
+    
+            await delay(TRANSITION_TIME / 7);
+        }
+    };
 
     const toOffice = async (walkingStyle: ToOffice) => {
         if(isPlaying) return;
-        setIsPlaying(true)
         if (walkingStyle === ToOffice.NAVIGATE) await navigateToOffice();
         if (walkingStyle === ToOffice.TELEPORT) await teleportToOffice();
     };
@@ -140,6 +207,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         cameraPose: cameraPose,
         currentSweep: currentSweep,
         sweeps: filteredSweeps,
+        pathPositions: pathPositions,
         toOffice: toOffice
     };
 };

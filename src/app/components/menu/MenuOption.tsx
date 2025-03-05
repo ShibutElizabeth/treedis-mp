@@ -2,7 +2,7 @@
 
 import { MenuItem } from "@/app/types/utils";
 import styles from "./menu.module.css";
-import { useMatterportContext } from "@/app/hooks/UseMatterportContext";
+import { useMatterportContext } from "@/app/hooks/useMatterportContext";
 
 export const MenuOption = ({item} : {item: MenuItem}) => {
     const { toOffice } = useMatterportContext();

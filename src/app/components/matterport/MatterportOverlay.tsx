@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef } from "react";
-import { useMatterportScene } from "../hooks/useMatterportScene";
+import { useMatterportScene } from "../../hooks/useMatterportScene";
 import { MatterportContext } from "./MatterportContext";
-import ThreeModel from "./ThreeModel";
+import ThreeModel from "../three/ThreeModel";
 import styles from "@/app/page.module.css";
-import { Menu } from "./menu/Menu";
+import { Menu } from "../menu/Menu";
+import BlueDotPath from "../three/BlueDotPath";
 
 const MatterportOverlay = () => {
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -15,6 +16,7 @@ const MatterportOverlay = () => {
         <div className={styles.container}>
             <MatterportContext.Provider value={matterportScene}>
                 <ThreeModel />
+                <BlueDotPath />
                 <Menu></Menu>
             </MatterportContext.Provider>
             <iframe

@@ -1,4 +1,4 @@
-import { Sweep } from "../../../public/showcase-bundle/sdk";
+import { MpSdk, Sweep } from "../../../public/showcase-bundle/sdk";
 import { Position } from "../types/utils";
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -20,4 +20,17 @@ const findMaxSweep = (sweeps: Sweep.ObservableSweepData[]): Sweep.ObservableSwee
             ? sweep : max
     );
 
-export { delay, calculateYRotation, findMaxSweep };
+const interpolatePositions = (start: MpSdk.Vector3, end: MpSdk.Vector3, segments: number) => {
+    const positions: MpSdk.Vector3[] = [];
+    for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        positions.push({
+            x: start.x + t * (end.x - start.x),
+            y: start.y + t * (end.y - start.y),
+            z: start.z + t * (end.z - start.z),
+        });
+    }
+    return positions;
+};
+
+export { delay, calculateYRotation, findMaxSweep, interpolatePositions };

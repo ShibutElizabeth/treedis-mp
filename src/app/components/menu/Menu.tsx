@@ -4,7 +4,7 @@ import { MenuItem, ToOffice } from "@/app/types/utils";
 import styles from "./menu.module.css";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MenuOption } from "./MenuOption";
-import { useMatterportContext } from "@/app/hooks/UseMatterportContext";
+import { useMatterportContext } from "@/app/hooks/useMatterportContext";
 
 export const Menu = () => {
     const { sdk } = useMatterportContext();

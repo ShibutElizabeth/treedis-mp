@@ -1,4 +1,4 @@
-import MatterportOverlay from "@/app/components/MatterportOverlay";
+import MatterportOverlay from "@/app/components/matterport/MatterportOverlay";
 import styles from "./page.module.css";
 
 export default function Home() {
