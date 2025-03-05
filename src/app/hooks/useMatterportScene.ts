@@ -59,10 +59,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
         if (!mpSdk) return;
 
         const poseSubscription = mpSdk.Camera.pose.subscribe(setCameraPose);
-        const sweepSubscription = mpSdk.Sweep.current.subscribe((sweep) => {
-            setCurrentSweep(sweep);
-            
-        });
+        const sweepSubscription = mpSdk.Sweep.current.subscribe(setCurrentSweep);
         const sweepDataSubscription = mpSdk.Sweep.data.subscribe({
             onCollectionUpdated: (sweeps) => {
                 setFilteredSweeps(Object.values(sweeps).filter((sweep) => sweep.floorInfo.sequence === SWEEP_FLOOR));
@@ -115,6 +112,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
         const dotPositions: MpSdk.Vector3[] = [];
         const segments = 0.5;
+        let counter = 0;
 
         const updatePositions = (startSweep: MpSdk.Sweep.ObservableSweepData, endSweep: MpSdk.Sweep.ObservableSweepData) => {
             const { position: startPos } = startSweep;
@@ -122,6 +120,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
 
             const interpolatedPositions = interpolatePositions(startPos, endPos, segments);
             dotPositions.push(...interpolatedPositions);
+            counter += 1;
         }
 
         updatePositions(currentSweep, path[0].data);
@@ -143,7 +142,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
     
                 await mpSdk.Sweep.moveTo(id, {
                     transition: mpSdk.Sweep.Transition.FLY,
-                    transitionTime: TRANSITION_TIME,
+                    transitionTime: dotPositions.length / counter * 100,
                 });
     
                 await delay(TRANSITION_TIME / 7);
@@ -152,6 +151,7 @@ export const useMatterportScene = (iframeRef: RefObject<HTMLIFrameElement | null
             setIsPlaying(false);
             blueDotsModelNodes.forEach(node => node.stop());
             setBlueDotsModelNodes([]);
+            counter = 0;
         }
     };
 

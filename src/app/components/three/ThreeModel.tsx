@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import * as THREE from "three";
+import {
+    Scene,
+    DirectionalLight,
+    MeshPhysicalMaterial,
+    DoubleSide,
+    Object3D
+} from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { useMatterportContext } from "@/app/hooks/useMatterportContext";
 import { addModelToMatterport, getBlobUrl } from "../../utils/helpers";
@@ -21,27 +27,27 @@ const ThreeModel = () => {
     }, [])
 
     const generateGLB = async () => {
-        const scene = new THREE.Scene();
+        const scene = new Scene();
 
-        const directionalLight = new THREE.DirectionalLight('#ffffff', 10);
+        const directionalLight = new DirectionalLight('#ffffff', 10);
         directionalLight.position.set(2, 5, 2);
         scene.add(directionalLight);
     
-        const chairSeatMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#8a806d'),
+        const chairSeatMaterial = new MeshPhysicalMaterial({
+            color: '#8a806d',
             roughness: 1,
-            side: THREE.DoubleSide,
+            side: DoubleSide,
         });
 
-        const chairLegsMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#111111'),
+        const chairLegsMaterial = new MeshPhysicalMaterial({
+            color: '#111111',
             roughness: 1,
             metalness: 1,
-            side: THREE.DoubleSide,
+            side: DoubleSide,
         });
     
         const loadModel = () => {
-            return new Promise<THREE.Object3D>((resolve, reject) => {
+            return new Promise<Object3D>((resolve, reject) => {
                 const loader = new GLTFLoader();
                 loader.load(
                     "/chair.glb",
